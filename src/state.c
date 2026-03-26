@@ -31,8 +31,8 @@ void awdl_init_state(struct awdl_state *state, const char *hostname, const struc
                      struct awdl_chan chan, uint64_t now) {
 	state->self_address = *self;
 	strncpy(state->name, hostname, HOST_NAME_LENGTH_MAX);
-	state->version = awdl_version(3, 4);
-	state->dev_class = AWDL_DEVCLASS_MACOS;
+	state->version = awdl_version(10, 1);
+	state->dev_class = AWDL_DEVCLASS_TVOS;
 
 	state->sequence_number = 0;
 	state->psf_interval = PSF_INTERVAL_MASTER_TU;

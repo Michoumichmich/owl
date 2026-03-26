@@ -114,7 +114,7 @@ int awdl_init_sync_params_tlv(uint8_t *buf, const struct awdl_state *state) {
 	tlv->max_ext_multicast = state->sync.presence_mode - 1;
 	tlv->max_ext_af = state->sync.presence_mode - 1;
 
-	tlv->flags = htole16(0x1800); /* TODO: not sure what they do */
+	tlv->flags = htole16(0x1000); /* matches real Apple PSFs (March 2026) */
 
 	tlv->reserved = 0;
 
@@ -251,17 +251,14 @@ int awdl_init_data_path_state_tlv(uint8_t *buf, const struct awdl_state *state) 
 
 	tlv->awdl_addr = state->self_address;
 
-	tlv->country_code[0] = 'X';
-	tlv->country_code[1] = '0';
+	tlv->country_code[0] = 'U';
+	tlv->country_code[1] = 'S';
 	tlv->country_code[2] = 0;
 
-	if (awdl_chan_num(state->channel.master, AWDL_CHAN_ENC_OPCLASS) == 6)
-		tlv->social_channels = htole16(AWDL_SOCIAL_CHANNEL_6_BIT);
-	else if (awdl_chan_num(state->channel.master, AWDL_CHAN_ENC_OPCLASS) == 44) {
-		tlv->social_channels = htole16(AWDL_SOCIAL_CHANNEL_44_BIT);
-	} else { // 149
-		tlv->social_channels = htole16(AWDL_SOCIAL_CHANNEL_149_BIT);
-	}
+	/* Advertise all three social channels */
+	tlv->social_channels = htole16(AWDL_SOCIAL_CHANNEL_6_BIT |
+	                               AWDL_SOCIAL_CHANNEL_44_BIT |
+	                               AWDL_SOCIAL_CHANNEL_149_BIT);
 
 	tlv->ext_flags = htole16(0x0000);
 
