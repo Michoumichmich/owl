@@ -23,7 +23,7 @@
 #include "ieee80211.h"
 
 #define AWDL_ELECTION_TREE_MAX_HEIGHT 10 /* arbitrary limit */
-#define AWDL_ELECTION_METRIC_INIT 60
+#define AWDL_ELECTION_METRIC_INIT 660
 #define AWDL_ELECTION_COUNTER_INIT 0
 
 struct awdl_peer_state;

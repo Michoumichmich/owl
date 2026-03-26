@@ -53,7 +53,7 @@ void awdl_init_state(struct awdl_state *state, const char *hostname, const struc
 
 	awdl_sync_state_init(&state->sync, now);
 
-	state->channel.enc = AWDL_CHAN_ENC_OPCLASS;
+	state->channel.enc = AWDL_CHAN_ENC_SIMPLE;
 	state->channel.master = chan;
 	state->channel.current = CHAN_NULL;
 	//awdl_chanseq_init(state->channel.sequence);

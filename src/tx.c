@@ -369,10 +369,9 @@ int awdl_init_full_action_frame(uint8_t *buf, struct awdl_state *state, struct i
 	ptr += awdl_init_chanseq_tlv(ptr, state);
 	ptr += awdl_init_election_params_v2_tlv(ptr, state);
 	ptr += awdl_init_service_params_tlv(ptr, state);
-	if (type == AWDL_ACTION_MIF)
-		ptr += awdl_init_ht_capabilities_tlv(ptr, state);
-	if (type == AWDL_ACTION_MIF)
-		ptr += awdl_init_arpa_tlv(ptr, state);
+	/* Real Apple devices include HT Capabilities and ARPA in all frames (PSF + MIF) */
+	ptr += awdl_init_ht_capabilities_tlv(ptr, state);
+	ptr += awdl_init_arpa_tlv(ptr, state);
 	ptr += awdl_init_data_path_state_tlv(ptr, state);
 	ptr += awdl_init_version_tlv(ptr, state);
 	if (ieee80211_state->fcs)
