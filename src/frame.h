@@ -185,24 +185,42 @@ struct awdl_ht_capabilities_tlv {
 } __attribute__((__packed__));
 
 enum awdl_data_path_state_flags {
-	AWDL_DATA_PATH_FLAG_COUNTRY_CODE = 0x0100,
-	AWDL_DATA_PATH_FLAG_SOCIAL_CHANNEL_MAP = 0x0200,
 	AWDL_DATA_PATH_FLAG_INFRA_INFO = 0x0001,
 	AWDL_DATA_PATH_FLAG_INFRA_ADDRESS = 0x0002,
 	AWDL_DATA_PATH_FLAG_AWDL_ADDRESS = 0x0004,
 	AWDL_DATA_PATH_FLAG_UMI = 0x0010,
-	/* TODO complete */
+	AWDL_DATA_PATH_FLAG_DUALBAND = 0x0020,
+	AWDL_DATA_PATH_FLAG_AIRPLAY_SINK = 0x0040,
+	AWDL_DATA_PATH_FLAG_COUNTRY_CODE = 0x0100,
+	AWDL_DATA_PATH_FLAG_SOCIAL_CHANNEL_MAP = 0x0200,
+	AWDL_DATA_PATH_FLAG_AIRPLAY_SOLO = 0x0400,
+	AWDL_DATA_PATH_FLAG_UMI_SUPPORTED = 0x0800,
+	AWDL_DATA_PATH_FLAG_UNICAST_OPTIONS = 0x1000,
+	AWDL_DATA_PATH_FLAG_REALTIME = 0x2000,
+	AWDL_DATA_PATH_FLAG_RANGEABLE = 0x4000,
+	AWDL_DATA_PATH_FLAG_EXT_FLAGS = 0x8000,
 };
 
+/* Variable-length TLV matching real Apple PSF layout (flags=0xbf63).
+ * Field order follows the bit order in flags. */
 struct awdl_data_path_state_tlv {
 	uint8_t type;
 	uint16_t length;
 	uint16_t flags;
-	char country_code[3];
-	uint16_t social_channels;
-	struct ether_addr awdl_addr;
-	uint16_t ext_flags;
-	/* uint32_t logtrigger_id; if (ext_flags | 0x4) */
+	/* conditional fields — present based on flags bits */
+	char country_code[3];          /* if COUNTRY_CODE */
+	uint16_t social_channels;      /* if SOCIAL_CHANNEL_MAP */
+	struct ether_addr infra_bssid; /* if INFRA_INFO */
+	uint16_t infra_channel;        /* if INFRA_INFO */
+	struct ether_addr infra_addr;  /* if INFRA_ADDRESS */
+	uint16_t unicast_options_len;  /* if UNICAST_OPTIONS */
+	uint32_t unicast_options;      /* if UNICAST_OPTIONS */
+	uint16_t ext_flags;            /* if EXT_FLAGS */
+	uint16_t logtrigger_id;        /* if ext_flags & 0x01 */
+	uint32_t rlfc;                 /* if ext_flags & 0x04 */
+	uint32_t active_time;
+	uint32_t aw_seq_counter;
+	uint32_t update_counter;
 } __attribute__((__packed__));
 
 struct awdl_arpa_tlv {

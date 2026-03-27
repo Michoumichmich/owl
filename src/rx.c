@@ -67,26 +67,23 @@ int awdl_handle_chanseq_tlv(struct awdl_peer *src, const struct buf *val,
 	struct awdl_chan list[AWDL_CHANSEQ_LENGTH];
 	int size;
 
-	/* read and sanity check, we do not support any other configuration */
+	/* read channel sequence header */
 	READ_U8(val, 0, &count);
-	if (count + 1 != AWDL_CHANSEQ_LENGTH)
-		return RX_UNEXPECTED_VALUE;
+	if (count + 1 > AWDL_CHANSEQ_LENGTH) {
+		log_debug("chanseq: count %d exceeds max %d, clamping", count + 1, AWDL_CHANSEQ_LENGTH);
+		count = AWDL_CHANSEQ_LENGTH - 1;
+	}
 	READ_U8(val, 2, &duplicate_count);
-	if (duplicate_count > 0)
-		return RX_UNEXPECTED_VALUE;
 	READ_U8(val, 3, &step_count);
-	if (step_count + 1 != state->sync.presence_mode)
-		return RX_UNEXPECTED_VALUE;
 	READ_LE16(val, 4, &fill_channel);
-	if (fill_channel != 0xffff)
-		return RX_UNEXPECTED_VALUE;
-
 	READ_U8(val, 1, &encoding);
 	size = awdl_chan_encoding_size(encoding);
 	if (size < 1)
 		return RX_UNEXPECTED_VALUE;
 
-	for (int i = 0, offset = 6; i < AWDL_CHANSEQ_LENGTH; i++, offset += size)
+	/* Read up to count+1 channels, pad rest with zeros */
+	memset(list, 0, sizeof(list));
+	for (int i = 0, offset = 6; i < (int)(count + 1) && i < AWDL_CHANSEQ_LENGTH; i++, offset += size)
 		READ_BYTES_COPY(val, offset, list[i].val, size);
 
 	if (memcmp(src->sequence, list, sizeof(list))) {
@@ -306,8 +303,9 @@ int awdl_rx_action(const struct buf *frame, signed char rssi, uint64_t tsft,
 	}
 
 	if (buf_len(frame) > 0) {
-		log_debug("awdl_action: unexpected bytes (%d) at end of frame", buf_len(frame));
-		return RX_UNEXPECTED_FORMAT;
+		/* Real Apple frames may have trailing bytes (padding, FCS, unknown TLVs).
+		 * Don't reject the whole frame for this — the peer was already added. */
+		log_debug("awdl_action: ignoring %d trailing bytes at end of frame", buf_len(frame));
 	}
 
 	if (subtype == AWDL_ACTION_MIF)

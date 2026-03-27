@@ -114,7 +114,7 @@ int awdl_init_sync_params_tlv(uint8_t *buf, const struct awdl_state *state) {
 	tlv->max_ext_multicast = state->sync.presence_mode - 1;
 	tlv->max_ext_af = state->sync.presence_mode - 1;
 
-	tlv->flags = htole16(0x1000); /* matches real Apple PSFs (March 2026) */
+	tlv->flags = htole16(0x1800); /* seen in real Apple devices; some use 0x1000 */
 
 	tlv->reserved = 0;
 
@@ -243,24 +243,47 @@ int awdl_init_ht_capabilities_tlv(uint8_t *buf, const struct awdl_state *state _
 int awdl_init_data_path_state_tlv(uint8_t *buf, const struct awdl_state *state) {
 	struct awdl_data_path_state_tlv *tlv = (struct awdl_data_path_state_tlv *) buf;
 
+	memset(tlv, 0, sizeof(*tlv));
+
 	tlv->type = AWDL_DATA_PATH_STATE_TLV;
 	tlv->length = htole16(sizeof(struct awdl_data_path_state_tlv) - sizeof(struct tl));
 
-	/* TODO this is very ugly currently */
-	tlv->flags = htole16(0x8f24);
-
-	tlv->awdl_addr = state->self_address;
+	/* Matches real Apple PSFs (March 2026, macOS 25.4) */
+	tlv->flags = htole16(
+		AWDL_DATA_PATH_FLAG_INFRA_INFO |
+		AWDL_DATA_PATH_FLAG_INFRA_ADDRESS |
+		AWDL_DATA_PATH_FLAG_DUALBAND |
+		AWDL_DATA_PATH_FLAG_AIRPLAY_SINK |
+		AWDL_DATA_PATH_FLAG_COUNTRY_CODE |
+		AWDL_DATA_PATH_FLAG_SOCIAL_CHANNEL_MAP |
+		AWDL_DATA_PATH_FLAG_AIRPLAY_SOLO |
+		AWDL_DATA_PATH_FLAG_UMI_SUPPORTED |
+		AWDL_DATA_PATH_FLAG_UNICAST_OPTIONS |
+		AWDL_DATA_PATH_FLAG_REALTIME |
+		AWDL_DATA_PATH_FLAG_EXT_FLAGS
+	); /* = 0xbf63 */
 
 	tlv->country_code[0] = 'U';
 	tlv->country_code[1] = 'S';
 	tlv->country_code[2] = 0;
 
-	/* Advertise all three social channels */
 	tlv->social_channels = htole16(AWDL_SOCIAL_CHANNEL_6_BIT |
 	                               AWDL_SOCIAL_CHANNEL_44_BIT |
 	                               AWDL_SOCIAL_CHANNEL_149_BIT);
 
-	tlv->ext_flags = htole16(0x0000);
+	/* infra_bssid: zeros (not associated) */
+	/* infra_channel: 0 */
+	/* infra_addr: zeros */
+
+	tlv->unicast_options_len = htole16(4);
+	tlv->unicast_options = htole32(0);
+
+	tlv->ext_flags = htole16(0x006d); /* logtrigger, RLFC, social map supported, misc, DFS proxy */
+	tlv->logtrigger_id = htole16(0);
+	tlv->rlfc = htole32(0);
+	tlv->active_time = htole32(0);
+	tlv->aw_seq_counter = htole32(0);
+	tlv->update_counter = htole32(0);
 
 	return sizeof(struct awdl_data_path_state_tlv);
 }
